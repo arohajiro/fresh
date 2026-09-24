@@ -544,36 +544,8 @@
           オンライン研修に向けた環境改善のアドバイス
         </h3>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
-          <div class="p-4 rounded-xl bg-slate-50 border border-slate-200/80 space-y-1.5">
-            <div class="font-bold text-slate-800 flex items-center gap-1.5 text-sm">
-              <span class="w-2 h-2 rounded-full bg-brand-500"></span>
-              有線LAN接続の検討
-            </div>
-            <p class="text-slate-600 leading-relaxed">
-              Wi-Fi利用時にPingやジッターが大きい場合、ルーターからLANケーブル（CAT6以上推奨）で有線接続すると劇的に通信が安定し、画面共有のカクつきを防げます。
-            </p>
-          </div>
-
-          <div class="p-4 rounded-xl bg-slate-50 border border-slate-200/80 space-y-1.5">
-            <div class="font-bold text-slate-800 flex items-center gap-1.5 text-sm">
-              <span class="w-2 h-2 rounded-full bg-brand-500"></span>
-              Wi-Fi 5GHz帯（a/ac/ax）の利用
-            </div>
-            <p class="text-slate-600 leading-relaxed">
-              電子レンジやBluetoothと干渉しやすい「2.4GHz（SSID末尾-g）」ではなく、高速で電波干渉の少ない「5GHz帯（SSID末尾-a または 5G）」への接続を推奨します。
-            </p>
-          </div>
-
-          <div class="p-4 rounded-xl bg-slate-50 border border-slate-200/80 space-y-1.5">
-            <div class="font-bold text-slate-800 flex items-center gap-1.5 text-sm">
-              <span class="w-2 h-2 rounded-full bg-brand-500"></span>
-              テザリング・通信制限への注意
-            </div>
-            <p class="text-slate-600 leading-relaxed">
-              スマホのテザリングやポケットWi-Fiの場合、Teamsでの1日受講で数GB〜十数GB消費します。月間容量オーバーによる低速化制限がないか事前に契約をご確認ください。
-            </p>
-          </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs" id="advice-cards-container">
+          <!-- Dynamic cards injected via updateAdviceCards() -->
         </div>
       </div>
 
@@ -823,6 +795,8 @@
         statusDot.className = 'w-2 h-2 rounded-full bg-blue-500';
         statusText.textContent = '測定準備完了：下のボタンを押して測定を開始してください';
       }
+
+      updateAdviceCards();
     }
 
     let isTesting = false;
@@ -1155,10 +1129,16 @@
       const isPingGood = avgPing <= 60;
       const isPingPass = avgPing <= 120;
 
+      const { lineType, connectionType } = networkEnvironment;
+
       if (isDlGreat && isUlPass && isPingGood) {
         grade = 'S';
         title = '【品質判定：◎ 合格】極めて良好な研修受講環境です';
-        desc = 'Teamsのグループ通話および受講者発表時の画面共有、研修用LMS動画講義、YouTubeフルHD視聴のすべてを同時に行っても全く問題ありません。入社後もこの環境で安心してオンライン研修にご参加いただけます。';
+        if (lineType === 'tethering') {
+          desc = 'Teamsのグループ通話および受講者発表時の画面共有、研修用LMS動画講義、YouTubeフルHD視聴のすべてを同時に行っても全く問題ない高い通信速度です。テザリング利用時は日々のパケット通信量とスマートフォンのバッテリー消費にご留意ください。';
+        } else {
+          desc = 'Teamsのグループ通話および受講者発表時の画面共有、研修用LMS動画講義、YouTubeフルHD視聴のすべてを同時に行っても全く問題ありません。入社後もこの環境で安心してオンライン研修にご参加いただけます。';
+        }
         badgeBg = 'bg-emerald-100 text-emerald-800 border border-emerald-300';
         iconSvg = `<div class="p-3 bg-emerald-500 text-white rounded-xl shadow-xs">
           <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
@@ -1166,7 +1146,11 @@
       } else if (isDlPass && isUlPass && isPingPass) {
         grade = 'A';
         title = '【品質判定：◯ 合格】問題なくオンライン研修を受講可能です';
-        desc = 'AWSやYouTubeの動画視聴、Teamsでの講義受講や画面共有に必要な通信要件を満たしています。安定した状態でオンライン研修を受講いただけます。';
+        if (lineType === 'tethering') {
+          desc = '研修用LMSやYouTubeの動画視聴、Teamsでの講義受講や画面共有に必要な通信要件を満たしています。テザリングでの受講は可能ですが、1日数GB以上消費するため契約プランの通信制限にご注意ください。';
+        } else {
+          desc = '研修用LMSやYouTubeの動画視聴、Teamsでの講義受講や画面共有に必要な通信要件を満たしています。安定した状態でオンライン研修を受講いただけます。';
+        }
         badgeBg = 'bg-blue-100 text-blue-800 border border-blue-300';
         iconSvg = `<div class="p-3 bg-blue-600 text-white rounded-xl shadow-xs">
           <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
@@ -1174,7 +1158,18 @@
       } else if (downloadMbps >= 8 && uploadMbps >= 2.5 && avgPing <= 160) {
         grade = 'B';
         title = '【品質判定：△ 要注意】受講可能ですが、状況によりラグの懸念があります';
-        desc = '動画視聴は概ね可能ですが、Teamsで高解像度の画面共有を行う際や、通信が混雑する時間帯に音声の途切れや画面遅延が発生する可能性があります。可能であればWi-Fiルーターの近くで受講するか、有線LANケーブルの利用を推奨します。';
+        // Tailored descriptions based on line type (avoiding inappropriate router/wired LAN advice for tethering)
+        if (lineType === 'tethering') {
+          desc = '動画視聴は概ね可能ですが、Teamsで高解像度の画面共有を行う際や、電波の混雑時に音声の途切れや画面遅延が発生する可能性があります。スマートフォンを窓際など電波強度の高い場所に置くか、USBケーブルでの「USBテザリング接続」をお試しください。また、1日受講時のデータ通信制限にも十分ご注意ください。';
+        } else if (lineType === 'home_router') {
+          desc = '動画視聴は概ね可能ですが、Teamsで高解像度の画面共有を行う際や、通信が混雑する時間帯に電波の揺らぎが発生する可能性があります。ホームルーターを窓際など電波の入りやすい場所に設置するか、ルーターとPCをLANケーブルで直結することをおすすめします。';
+        } else if (lineType === 'mobile_wifi') {
+          desc = '動画視聴は概ね可能ですが、Teamsで高解像度の画面共有を行う際や、電波混雑時に音声の途切れや画面遅延が発生する可能性があります。端末を電波の良い窓際に配置するか、クレードル等での有線接続、日次・月次の速度制限に達していないかご確認ください。';
+        } else if (connectionType === 'wired') {
+          desc = '動画視聴は概ね可能ですが、Teamsで高解像度の画面共有を行う際や、プロバイダの混雑する時間帯に音声の途切れや画面遅延が発生する可能性があります。ルーターの再起動や、同居者の大容量ダウンロード等の一時停止をお試しください。';
+        } else {
+          desc = '動画視聴は概ね可能ですが、Teamsで高解像度の画面共有を行う際や、通信が混雑する時間帯に音声の途切れや画面遅延が発生する可能性があります。可能であればWi-Fiルーターの近くで受講するか、5GHz帯Wi-Fiの利用、有線LANケーブルの利用を推奨します。';
+        }
         badgeBg = 'bg-amber-100 text-amber-800 border border-amber-300';
         iconSvg = `<div class="p-3 bg-amber-500 text-white rounded-xl shadow-xs">
           <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
@@ -1182,7 +1177,13 @@
       } else {
         grade = 'C';
         title = '【品質判定：✕ 要改善】オンライン研修に支障が出る可能性が高いです';
-        desc = '下り・上り速度または応答遅延（Ping）が推奨基準を下回っています。Teams講義での強制切断や、画面共有のフリーズ、AWS動画のバッファ停止が発生する恐れがあります。有線LANへの切り替えやルーターの再起動、契約回線の見直し等の対策をご検討ください。';
+        if (lineType === 'tethering') {
+          desc = '下り・上り速度または応答遅延（Ping）が推奨基準を下回っています。Teams講義での強制切断や、画面共有のフリーズ、研修用LMS動画のバッファ停止が発生する恐れがあります。スマホを窓際に移動する、USBテザリング接続を試す、または通信制限の有無をご確認ください。改善が難しい場合は運営への事前相談や安定した回線環境での受講をご検討ください。';
+        } else if (lineType === 'home_router' || lineType === 'mobile_wifi') {
+          desc = '下り・上り速度または応答遅延（Ping）が推奨基準を下回っています。Teams講義での強制切断や、画面共有のフリーズ、研修用LMS動画のバッファ停止が発生する恐れがあります。端末を窓際へ移動する、有線LAN接続を試す、機器の再起動や通信制限の有無をご確認ください。';
+        } else {
+          desc = '下り・上り速度または応答遅延（Ping）が推奨基準を下回っています。Teams講義での強制切断や、画面共有のフリーズ、研修用LMS動画のバッファ停止が発生する恐れがあります。有線LANへの切り替えやルーターの再起動、プロバイダや契約回線の見直し等の対策をご検討ください。';
+        }
         badgeBg = 'bg-rose-100 text-rose-800 border border-rose-300';
         iconSvg = `<div class="p-3 bg-rose-600 text-white rounded-xl shadow-xs">
           <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
@@ -1243,6 +1244,139 @@
       document.getElementById('results-panel').classList.remove('hidden');
       document.getElementById('results-panel').scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
+
+    function updateAdviceCards() {
+      const container = document.getElementById('advice-cards-container');
+      if (!container) return;
+
+      const { lineType, connectionType } = networkEnvironment;
+
+      if (lineType === 'tethering' || connectionType === 'cellular') {
+        container.innerHTML = `
+          <div class="p-4 rounded-xl bg-slate-50 border border-slate-200/80 space-y-1.5">
+            <div class="font-bold text-slate-800 flex items-center gap-1.5 text-sm">
+              <span class="w-2 h-2 rounded-full bg-brand-500"></span>
+              USBテザリング接続の活用
+            </div>
+            <p class="text-slate-600 leading-relaxed">
+              スマホとPCをUSBケーブルで直結する「USBテザリング」にすると、Wi-Fi電波干渉を防ぎPing遅延が安定します。スマホの給電や発熱軽減にも有効です。
+            </p>
+          </div>
+          <div class="p-4 rounded-xl bg-slate-50 border border-slate-200/80 space-y-1.5">
+            <div class="font-bold text-slate-800 flex items-center gap-1.5 text-sm">
+              <span class="w-2 h-2 rounded-full bg-brand-500"></span>
+              スマホの設置場所（窓際設置）
+            </div>
+            <p class="text-slate-600 leading-relaxed">
+              モバイル電波（4G/5G）は室内の壁で減衰します。スマホを窓際など電波感度の良い場所に置くことで、通信速度と安定性が大きく向上します。
+            </p>
+          </div>
+          <div class="p-4 rounded-xl bg-slate-50 border border-slate-200/80 space-y-1.5">
+            <div class="font-bold text-slate-800 flex items-center gap-1.5 text-sm">
+              <span class="w-2 h-2 rounded-full bg-brand-500"></span>
+              通信容量・速度制限への事前確認
+            </div>
+            <p class="text-slate-600 leading-relaxed">
+              Teamsでの終日講義や動画視聴で1日3〜8GB程度消費します。月間ギガ数の上限超過による低速化（128kbps制限など）が発生しないか事前にプランをご確認ください。
+            </p>
+          </div>
+        `;
+      } else if (lineType === 'home_router' || lineType === 'mobile_wifi') {
+        container.innerHTML = `
+          <div class="p-4 rounded-xl bg-slate-50 border border-slate-200/80 space-y-1.5">
+            <div class="font-bold text-slate-800 flex items-center gap-1.5 text-sm">
+              <span class="w-2 h-2 rounded-full bg-brand-500"></span>
+              ルーターとPCを有線LAN直結
+            </div>
+            <p class="text-slate-600 leading-relaxed">
+              ホームルーター背面やモバイルルーターのクレードルにあるLANポートからPCへ有線接続すると、室内Wi-Fi干渉を排除してPingと画面共有が安定します。
+            </p>
+          </div>
+          <div class="p-4 rounded-xl bg-slate-50 border border-slate-200/80 space-y-1.5">
+            <div class="font-bold text-slate-800 flex items-center gap-1.5 text-sm">
+              <span class="w-2 h-2 rounded-full bg-brand-500"></span>
+              電波の届きやすい窓際への設置
+            </div>
+            <p class="text-slate-600 leading-relaxed">
+              モバイル基地局からの電波を受信しやすくするため、ルーター本体を部屋の奥ではなく外光が入る窓際に置くことを強く推奨します。
+            </p>
+          </div>
+          <div class="p-4 rounded-xl bg-slate-50 border border-slate-200/80 space-y-1.5">
+            <div class="font-bold text-slate-800 flex items-center gap-1.5 text-sm">
+              <span class="w-2 h-2 rounded-full bg-brand-500"></span>
+              夜間・混雑時間帯や通信制限の確認
+            </div>
+            <p class="text-slate-600 leading-relaxed">
+              モバイル系回線は混雑時や短期間での大量通信時に速度制御がかかる場合があります。研修時間帯での安定性や契約プランの制限仕様をご確認ください。
+            </p>
+          </div>
+        `;
+      } else if (connectionType === 'wired') {
+        container.innerHTML = `
+          <div class="p-4 rounded-xl bg-slate-50 border border-slate-200/80 space-y-1.5">
+            <div class="font-bold text-slate-800 flex items-center gap-1.5 text-sm">
+              <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+              理想的な有線LAN受講環境
+            </div>
+            <p class="text-slate-600 leading-relaxed">
+              有線LAN接続は電波干渉を受けず、最も低遅延（低Ping）かつ安定した状態でTeams画面共有や動画講義を受講いただけます。
+            </p>
+          </div>
+          <div class="p-4 rounded-xl bg-slate-50 border border-slate-200/80 space-y-1.5">
+            <div class="font-bold text-slate-800 flex items-center gap-1.5 text-sm">
+              <span class="w-2 h-2 rounded-full bg-brand-500"></span>
+              LANケーブル規格（CAT6以上）
+            </div>
+            <p class="text-slate-600 leading-relaxed">
+              古いCAT5（最大100Mbps）ではなく、ギガビット対応の「CAT5e」「CAT6」「CAT6A」などのLANケーブルを使用すると回線のポテンシャルを最大限発揮できます。
+            </p>
+          </div>
+          <div class="p-4 rounded-xl bg-slate-50 border border-slate-200/80 space-y-1.5">
+            <div class="font-bold text-slate-800 flex items-center gap-1.5 text-sm">
+              <span class="w-2 h-2 rounded-full bg-brand-500"></span>
+              家庭内帯域の占有に配慮
+            </div>
+            <p class="text-slate-600 leading-relaxed">
+              同居のご家族等による大容量ゲームのダウンロードや4K動画視聴と重なると遅延が増大することがあります。重要な研修中は配慮をお願いしましょう。
+            </p>
+          </div>
+        `;
+      } else {
+        // Default / Fixed line with Wi-Fi
+        container.innerHTML = `
+          <div class="p-4 rounded-xl bg-slate-50 border border-slate-200/80 space-y-1.5">
+            <div class="font-bold text-slate-800 flex items-center gap-1.5 text-sm">
+              <span class="w-2 h-2 rounded-full bg-brand-500"></span>
+              有線LAN接続の検討
+            </div>
+            <p class="text-slate-600 leading-relaxed">
+              Wi-Fi利用時にPingやジッターが大きい場合、ルーターからLANケーブル（CAT6以上推奨）で有線接続すると劇的に通信が安定し、画面共有のカクつきを防げます。
+            </p>
+          </div>
+          <div class="p-4 rounded-xl bg-slate-50 border border-slate-200/80 space-y-1.5">
+            <div class="font-bold text-slate-800 flex items-center gap-1.5 text-sm">
+              <span class="w-2 h-2 rounded-full bg-brand-500"></span>
+              Wi-Fi 5GHz帯（a/ac/ax）の利用
+            </div>
+            <p class="text-slate-600 leading-relaxed">
+              電子レンジやBluetoothと干渉しやすい「2.4GHz（SSID末尾-g）」ではなく、高速で電波干渉の少ない「5GHz帯（SSID末尾-a または 5G）」への接続を推奨します。
+            </p>
+          </div>
+          <div class="p-4 rounded-xl bg-slate-50 border border-slate-200/80 space-y-1.5">
+            <div class="font-bold text-slate-800 flex items-center gap-1.5 text-sm">
+              <span class="w-2 h-2 rounded-full bg-brand-500"></span>
+              ルーターの設置場所・障害物の確認
+            </div>
+            <p class="text-slate-600 leading-relaxed">
+              ルーターとPCの間に壁や金属製家具、水槽などの遮蔽物があると電波強度が低下します。見通しの良い位置での受講をおすすめします。
+            </p>
+          </div>
+        `;
+      }
+    }
+
+    // Call once initially
+    updateAdviceCards();
 
     function updateServicePill(elementId, isOptimal, isAcceptable, textOptimal, textAcceptable, textFail) {
       const container = document.getElementById(elementId);
